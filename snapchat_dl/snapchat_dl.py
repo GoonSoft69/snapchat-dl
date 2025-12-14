@@ -77,8 +77,9 @@ class SnapchatDL:
                     raise UserNotFoundError
 
             def util_web_story(content: dict):
-                if "story" in content["props"]["pageProps"]:
-                    return content["props"]["pageProps"]["story"]["snapList"]
+                story_data = content["props"]["pageProps"].get("story")
+                if isinstance(story_data, dict) and "snapList" in story_data:
+                    return story_data["snapList"]
                 return list()
 
             def util_web_extract(content: dict):
