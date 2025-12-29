@@ -68,7 +68,7 @@ class SnapchatDL:
         try:
             response_json = json.loads(response_json_raw[0])
 
-            def util_web_user_info(content: dict):
+            def extract_user_info(content: dict):
                 if "userProfile" in content["props"]["pageProps"]:
                     user_profile = content["props"]["pageProps"]["userProfile"]
                     field_id = user_profile["$case"]
@@ -76,21 +76,26 @@ class SnapchatDL:
                 else:
                     raise UserNotFoundError
 
-            def util_web_story(content: dict):
+            def extract_stories(content: dict):
                 story_data = content["props"]["pageProps"].get("story")
                 if isinstance(story_data, dict) and "snapList" in story_data:
                     return story_data["snapList"]
                 return list()
 
-            def util_web_extract(content: dict):
+            def extract_highlights(content: dict):
                 if "curatedHighlights" in content["props"]["pageProps"]:
                     return content["props"]["pageProps"]["curatedHighlights"]
                 return list()
 
-            user_info = util_web_user_info(response_json)
-            stories = util_web_story(response_json)
-            curatedHighlights = util_web_extract(response_json)
-            spotHighlights = util_web_extract(response_json)
+            def extract_spotlights(content: dict):
+                if "spotlightHighlights" in content["props"]["pageProps"]:
+                    return content["props"]["pageProps"]["spotlightHighlights"]
+                return list()
+
+            user_info = extract_user_info(response_json)
+            stories = extract_stories(response_json)
+            curatedHighlights = extract_highlights(response_json)
+            spotHighlights = extract_spotlights(response_json)
             return stories, user_info, curatedHighlights, spotHighlights
         except (IndexError, KeyError, ValueError):
             raise APIResponseError
