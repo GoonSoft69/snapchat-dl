@@ -95,8 +95,8 @@ class SnapchatDL:
             user_info = extract_user_info(response_json)
             stories = extract_stories(response_json)
             curatedHighlights = extract_highlights(response_json)
-            spotHighlights = extract_spotlights(response_json)
-            return stories, user_info, curatedHighlights, spotHighlights
+            spotlights = extract_spotlights(response_json)
+            return stories, user_info, curatedHighlights, spotlights
         except (IndexError, KeyError, ValueError):
             raise APIResponseError
 
