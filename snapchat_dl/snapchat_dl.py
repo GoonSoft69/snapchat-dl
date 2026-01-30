@@ -50,53 +50,60 @@ class SnapchatDL:
             },
         ).text
 
-    def _web_fetch_story(self, username):
-        """Download user stories from Web.
+    def fetch_user_info(self, username):
+        response = self._api_response(username)
+        response_json_raw = re.findall(self.regexp_web_json, response)
 
-        Args:
-            username (str): Snapchat `username`
-
-        Raises:
-            APIResponseError: API Error
-
-        Returns:
-            (dict, dict): user_info, stories
-        """
+        try:
+            response_json = json.loads(response_json_raw[0])
+            
+            if "userProfile" in response_json["props"]["pageProps"]:
+                user_profile = response_json["props"]["pageProps"]["userProfile"]
+                field_id = user_profile["$case"]
+                return user_profile[field_id]
+            else:
+                raise UserNotFoundError
+            
+        except (IndexError, KeyError, ValueError):
+            raise APIResponseError
+        
+    def fetch_stories(self, username):
         response = self._api_response(username)
         response_json_raw = re.findall(self.regexp_web_json, response)
 
         try:
             response_json = json.loads(response_json_raw[0])
 
-            def extract_user_info(content: dict):
-                if "userProfile" in content["props"]["pageProps"]:
-                    user_profile = content["props"]["pageProps"]["userProfile"]
-                    field_id = user_profile["$case"]
-                    return user_profile[field_id]
-                else:
-                    raise UserNotFoundError
+            story_data = response_json["props"]["pageProps"].get("story")
+            if isinstance(story_data, dict) and "snapList" in story_data:
+                return story_data["snapList"]
+            return list()
+        except (IndexError, KeyError, ValueError):
+            raise APIResponseError
+        
+    def fetch_highlights(self, username):
+        response = self._api_response(username)
+        response_json_raw = re.findall(self.regexp_web_json, response)
 
-            def extract_stories(content: dict):
-                story_data = content["props"]["pageProps"].get("story")
-                if isinstance(story_data, dict) and "snapList" in story_data:
-                    return story_data["snapList"]
-                return list()
+        try:
+            response_json = json.loads(response_json_raw[0])
 
-            def extract_highlights(content: dict):
-                if "curatedHighlights" in content["props"]["pageProps"]:
-                    return content["props"]["pageProps"]["curatedHighlights"]
-                return list()
+            if "curatedHighlights" in response_json["props"]["pageProps"]:
+                return response_json["props"]["pageProps"]["curatedHighlights"]
+            return list()
+        except (IndexError, KeyError, ValueError):
+            raise APIResponseError
+        
+    def fetch_spotlights(self, username):
+        response = self._api_response(username)
+        response_json_raw = re.findall(self.regexp_web_json, response)
 
-            def extract_spotlights(content: dict):
-                if "spotlightHighlights" in content["props"]["pageProps"]:
-                    return content["props"]["pageProps"]["spotlightHighlights"]
-                return list()
+        try:
+            response_json = json.loads(response_json_raw[0])
 
-            user_info = extract_user_info(response_json)
-            stories = extract_stories(response_json)
-            curatedHighlights = extract_highlights(response_json)
-            spotlights = extract_spotlights(response_json)
-            return stories, user_info, curatedHighlights, spotlights
+            if "spotlightHighlights" in response_json["props"]["pageProps"]:
+                return response_json["props"]["pageProps"]["spotlightHighlights"]
+            return list()
         except (IndexError, KeyError, ValueError):
             raise APIResponseError
 
